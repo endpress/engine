@@ -392,6 +392,9 @@
   if (_splashScreenView == nullptr) {
     NSString* launchStoryboardName =
         [[[NSBundle mainBundle] infoDictionary] objectForKey:@"UILaunchStoryboardName"];
+    if (launchStoryboardName == nil) {
+      return nil;
+    }
     UIStoryboard* storyboard = [UIStoryboard storyboardWithName:launchStoryboardName bundle:nil];
     if (storyboard == nil) {
       return nil;
@@ -836,7 +839,7 @@ static inline blink::PointerData::DeviceKind DeviceKindFromTouchType(UITouch* to
   if (UIAccessibilityIsInvertColorsEnabled())
     flags ^= static_cast<int32_t>(blink::AccessibilityFeatureFlag::kInvertColors);
   if (UIAccessibilityIsReduceMotionEnabled())
-    flags ^= static_cast<int32_t>(blink::AccessibilityFeatureFlag::kDisableAnimations);
+    flags ^= static_cast<int32_t>(blink::AccessibilityFeatureFlag::kReduceMotion);
   if (UIAccessibilityIsBoldTextEnabled())
     flags ^= static_cast<int32_t>(blink::AccessibilityFeatureFlag::kBoldText);
 #if TARGET_OS_SIMULATOR

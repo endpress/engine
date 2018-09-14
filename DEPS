@@ -23,7 +23,7 @@ vars = {
   'fuchsia_git': 'https://fuchsia.googlesource.com',
   'github_git': 'https://github.com',
   'skia_git': 'https://skia.googlesource.com',
-  'skia_revision': '71f8475a0dbacc5d63fef094100835bad7b1e74c',
+  'skia_revision': '46a5f6c28a34feeabab8f3256bcfc006c2f225f5',
 
   # When updating the Dart revision, ensure that all entries that are
   # dependencies of Dart are also updated to match the entries in the
@@ -31,7 +31,7 @@ vars = {
   # Dart is: https://github.com/dart-lang/sdk/blob/master/DEPS.
   # You can use //tools/dart/create_updated_flutter_deps.py to produce
   # updated revision list of existing dependencies.
-  'dart_revision': '2b995b2654ba162c48cdd187ce0b2f1d24c6838f',
+  'dart_revision': 'c28db2d6e17f046f95db5987394df43c95d58468',
 
   'dart_args_tag': '1.4.4',
   'dart_async_tag': '2.0.8',
@@ -58,7 +58,7 @@ vars = {
   'dart_http_throttle_tag': '1.0.2',
   'dart_intl_tag': '0.15.6',
   'dart_json_rpc_2_tag': '2.0.9',
-  'dart_linter_tag': '0.1.60',
+  'dart_linter_tag': '0.1.61',
   'dart_logging_tag': '0.11.3+2',
   'dart_markdown_tag': '2.0.2',
   'dart_matcher_tag': '0.12.3',
@@ -102,7 +102,7 @@ vars = {
   # Build bot tooling for iOS
   'ios_tools_revision': '69b7c1b160e7107a6a98d948363772dc9caea46f',
 
-  'buildtools_revision': 'ae85410691b10aa2469695c2421b1fe751843e64',
+  'buildtools_revision': 'c1408453246f0475547b6fe634c2f3dad71c6457',
 }
 
 # Only these hosts are allowed for dependencies in this DEPS file.
@@ -115,7 +115,7 @@ allowed_hosts = [
 ]
 
 deps = {
-  'src': 'https://github.com/flutter/buildroot.git' + '@' + '7aadfaf196f9cd8a299f9ad78fab63362800466d',
+  'src': 'https://github.com/flutter/buildroot.git' + '@' + '7141218c62890635ce966e2530b465ea4c55c3e2',
 
    # Fuchsia compatibility
    #
@@ -351,7 +351,7 @@ deps = {
    Var('chromium_git') + '/external/colorama.git' + '@' + '799604a1041e9b3bc5d2789ecbd7e8db2e18e6b8',
 
   'src/third_party/freetype2':
-   Var('fuchsia_git') + '/third_party/freetype2' + '@' + '3515a77bb83002b69a2957efdbcb764de4de07da',
+   Var('fuchsia_git') + '/third_party/freetype2' + '@' + '6581fd3e9c8645f01c0d51e4f53893f5391f2bf3',
 
   'src/third_party/root_certificates':
    Var('dart_git') + '/root_certificates.git' + '@' + Var('dart_root_certificates_rev'),
