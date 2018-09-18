@@ -1,4 +1,4 @@
-Signature: 9172d63708dc001f48198ed2e2745964
+Signature: 50b3d2570775ed8879ed4580b0909186
 
 UNUSED LICENSES:
 
@@ -1524,17 +1524,34 @@ FILE: ../../../third_party/skia/src/gpu/effects/GrYUVtoRGBEffect.h
 FILE: ../../../third_party/skia/src/gpu/gradients/GrClampedGradientEffect.cpp
 FILE: ../../../third_party/skia/src/gpu/gradients/GrClampedGradientEffect.fp
 FILE: ../../../third_party/skia/src/gpu/gradients/GrClampedGradientEffect.h
+FILE: ../../../third_party/skia/src/gpu/gradients/GrDualIntervalGradientColorizer.cpp
+FILE: ../../../third_party/skia/src/gpu/gradients/GrDualIntervalGradientColorizer.fp
+FILE: ../../../third_party/skia/src/gpu/gradients/GrDualIntervalGradientColorizer.h
+FILE: ../../../third_party/skia/src/gpu/gradients/GrGradientBitmapCache.cpp
+FILE: ../../../third_party/skia/src/gpu/gradients/GrGradientBitmapCache.h
 FILE: ../../../third_party/skia/src/gpu/gradients/GrGradientShader.cpp
 FILE: ../../../third_party/skia/src/gpu/gradients/GrGradientShader.h
 FILE: ../../../third_party/skia/src/gpu/gradients/GrLinearGradientLayout.cpp
 FILE: ../../../third_party/skia/src/gpu/gradients/GrLinearGradientLayout.fp
 FILE: ../../../third_party/skia/src/gpu/gradients/GrLinearGradientLayout.h
+FILE: ../../../third_party/skia/src/gpu/gradients/GrRadialGradientLayout.cpp
+FILE: ../../../third_party/skia/src/gpu/gradients/GrRadialGradientLayout.fp
+FILE: ../../../third_party/skia/src/gpu/gradients/GrRadialGradientLayout.h
 FILE: ../../../third_party/skia/src/gpu/gradients/GrSingleIntervalGradientColorizer.cpp
 FILE: ../../../third_party/skia/src/gpu/gradients/GrSingleIntervalGradientColorizer.fp
 FILE: ../../../third_party/skia/src/gpu/gradients/GrSingleIntervalGradientColorizer.h
+FILE: ../../../third_party/skia/src/gpu/gradients/GrSweepGradientLayout.cpp
+FILE: ../../../third_party/skia/src/gpu/gradients/GrSweepGradientLayout.fp
+FILE: ../../../third_party/skia/src/gpu/gradients/GrSweepGradientLayout.h
+FILE: ../../../third_party/skia/src/gpu/gradients/GrTextureGradientColorizer.cpp
+FILE: ../../../third_party/skia/src/gpu/gradients/GrTextureGradientColorizer.fp
+FILE: ../../../third_party/skia/src/gpu/gradients/GrTextureGradientColorizer.h
 FILE: ../../../third_party/skia/src/gpu/gradients/GrTiledGradientEffect.cpp
 FILE: ../../../third_party/skia/src/gpu/gradients/GrTiledGradientEffect.fp
 FILE: ../../../third_party/skia/src/gpu/gradients/GrTiledGradientEffect.h
+FILE: ../../../third_party/skia/src/gpu/gradients/GrTwoPointConicalGradientLayout.cpp
+FILE: ../../../third_party/skia/src/gpu/gradients/GrTwoPointConicalGradientLayout.fp
+FILE: ../../../third_party/skia/src/gpu/gradients/GrTwoPointConicalGradientLayout.h
 FILE: ../../../third_party/skia/src/gpu/mtl/GrMtlBuffer.h
 FILE: ../../../third_party/skia/src/gpu/mtl/GrMtlBuffer.mm
 FILE: ../../../third_party/skia/src/gpu/mtl/GrMtlCopyManager.h
@@ -3172,8 +3189,6 @@ FILE: ../../../third_party/skia/src/shaders/SkLocalMatrixShader.cpp
 FILE: ../../../third_party/skia/src/shaders/SkLocalMatrixShader.h
 FILE: ../../../third_party/skia/src/shaders/SkPictureShader.cpp
 FILE: ../../../third_party/skia/src/shaders/SkPictureShader.h
-FILE: ../../../third_party/skia/src/shaders/gradients/SkTwoPointConicalGradient_gpu.cpp
-FILE: ../../../third_party/skia/src/shaders/gradients/SkTwoPointConicalGradient_gpu.h
 FILE: ../../../third_party/skia/src/utils/SkDashPath.cpp
 FILE: ../../../third_party/skia/src/utils/SkDashPathPriv.h
 FILE: ../../../third_party/skia/src/utils/SkEventTracer.cpp
@@ -5182,8 +5197,6 @@ FILE: ../../../third_party/skia/src/gpu/GrRenderTargetOpList.h
 FILE: ../../../third_party/skia/src/gpu/SkGpuDevice.h
 FILE: ../../../third_party/skia/src/gpu/SkGr.cpp
 FILE: ../../../third_party/skia/src/ports/SkDebug_win.cpp
-FILE: ../../../third_party/skia/src/shaders/gradients/SkGradientBitmapCache.cpp
-FILE: ../../../third_party/skia/src/shaders/gradients/SkGradientBitmapCache.h
 ----------------------------------------------------------------------------------------------------
 Copyright 2010 Google Inc.
 
