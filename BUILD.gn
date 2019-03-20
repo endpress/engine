@@ -1,8 +1,14 @@
-# Copyright 2014 The Chromium Authors. All rights reserved.
+# Copyright 2013 The Flutter Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 import("$flutter_root/common/config.gni")
+
+# Whether to build the dartdevc sdk, libraries, and source files
+# required for the flutter web sdk.
+declare_args() {
+  full_dart_sdk = false  
+}
 
 group("flutter") {
   testonly = true
@@ -18,18 +24,18 @@ group("flutter") {
     public_deps += [ "$flutter_root/shell/testing" ]
   }
 
-  if (flutter_runtime_mode != "debug" &&
-      flutter_runtime_mode != "dynamic_profile" &&
-      flutter_runtime_mode != "dynamic_release") {
-    public_deps += [ "$flutter_root/lib/snapshot:entry_points_json_files" ]
-  }
-
   if (!is_fuchsia && !is_fuchsia_host) {
     if (current_toolchain == host_toolchain) {
       public_deps += [
         "$flutter_root/frontend_server",
         "//third_party/dart:create_sdk",
       ]
+
+      if (full_dart_sdk) {
+        public_deps += [
+          "$flutter_root/web_sdk",
+        ]
+      }
     }
   }
 
@@ -46,9 +52,14 @@ group("flutter") {
       "$flutter_root/runtime:runtime_unittests",
       "$flutter_root/shell/common:shell_unittests",
       "$flutter_root/shell/platform/embedder:embedder_unittests",
+      "$flutter_root/shell/platform/embedder:embedder_a11y_unittests", # TODO(cbracken) build these into a different kernel blob in the embedder tests and load that in a test in embedder_unittests
       "$flutter_root/synchronization:synchronization_unittests",
       "$flutter_root/third_party/txt:txt_unittests",
     ]
+
+    if (!is_win) {
+      public_deps += [ "$flutter_root/shell/common:shell_benchmarks" ]
+    }
   }
 }
 

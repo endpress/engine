@@ -1,4 +1,4 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -85,10 +85,13 @@ blink::SemanticsAction GetSemanticsActionForScrollDirection(
 - (instancetype)initWithSemanticsObject:(SemanticsObject*)semanticsObject
                                  bridge:(fml::WeakPtr<shell::AccessibilityBridge>)bridge
     NS_DESIGNATED_INITIALIZER;
+
+@property(nonatomic, weak) SemanticsObject* semanticsObject;
+
 @end
 
 @implementation SemanticsObject {
-  SemanticsObjectContainer* _container;
+  fml::scoped_nsobject<SemanticsObjectContainer> _container;
 }
 
 #pragma mark - Override base class designated initializers
@@ -110,7 +113,7 @@ blink::SemanticsAction GetSemanticsActionForScrollDirection(
   if (self) {
     _bridge = bridge;
     _uid = uid;
-    self.children = [[[NSMutableArray alloc] init] autorelease];
+    _children = [[NSMutableArray alloc] init];
   }
 
   return self;
@@ -121,10 +124,9 @@ blink::SemanticsAction GetSemanticsActionForScrollDirection(
     child.parent = nil;
   }
   [_children removeAllObjects];
-  [_children dealloc];
+  [_children release];
   _parent = nil;
-  [_container release];
-  _container = nil;
+  _container.get().semanticsObject = nil;
   [super dealloc];
 }
 
@@ -257,7 +259,7 @@ blink::SemanticsAction GetSemanticsActionForScrollDirection(
   // `rect` is in the physical pixel coordinate system. iOS expects the accessibility frame in
   // the logical pixel coordinate system. Therefore, we divide by the `scale` (pixel ratio) to
   // convert.
-  CGFloat scale = [[[self bridge] -> view() window] screen].scale;
+  CGFloat scale = [[[self bridge]->view() window] screen].scale;
   auto result =
       CGRectMake(rect.x() / scale, rect.y() / scale, rect.width() / scale, rect.height() / scale);
   return UIAccessibilityConvertFrameToScreenCoordinates(result, [self bridge] -> view());
@@ -268,9 +270,9 @@ blink::SemanticsAction GetSemanticsActionForScrollDirection(
 - (id)accessibilityContainer {
   if ([self hasChildren] || [self uid] == kRootNodeId) {
     if (_container == nil)
-      _container =
-          [[SemanticsObjectContainer alloc] initWithSemanticsObject:self bridge:[self bridge]];
-    return _container;
+      _container.reset([[SemanticsObjectContainer alloc] initWithSemanticsObject:self
+                                                                          bridge:[self bridge]]);
+    return _container.get();
   }
   if ([self parent] == nil) {
     // This can happen when we have released the accessibility tree but iOS is
@@ -410,22 +412,15 @@ blink::SemanticsAction GetSemanticsActionForScrollDirection(
 
 - (instancetype)initWithSemanticsObject:(SemanticsObject*)semanticsObject
                                  bridge:(fml::WeakPtr<shell::AccessibilityBridge>)bridge {
-  FML_DCHECK(semanticsObject != nil) << "semanticsObject must be set";
+  FML_DCHECK(semanticsObject) << "semanticsObject must be set";
   self = [super init];
 
   if (self) {
     _semanticsObject = semanticsObject;
-    // The pointer is managed manually.
-    [_semanticsObject retain];
     _bridge = bridge;
   }
 
   return self;
-}
-
-- (void)dealloc {
-  [_semanticsObject release];
-  [super dealloc];
 }
 
 #pragma mark - UIAccessibilityContainer overrides
@@ -437,8 +432,9 @@ blink::SemanticsAction GetSemanticsActionForScrollDirection(
 - (nullable id)accessibilityElementAtIndex:(NSInteger)index {
   if (index < 0 || index >= [self accessibilityElementCount])
     return nil;
-  if (index == 0)
+  if (index == 0) {
     return _semanticsObject;
+  }
   SemanticsObject* child = [_semanticsObject children][index - 1];
   if ([child hasChildren])
     return [child accessibilityContainer];
@@ -498,7 +494,7 @@ AccessibilityBridge::AccessibilityBridge(UIView* view, PlatformViewIOS* platform
       previous_routes_({}) {
   accessibility_channel_.reset([[FlutterBasicMessageChannel alloc]
          initWithName:@"flutter/accessibility"
-      binaryMessenger:platform_view->GetOwnerViewController()
+      binaryMessenger:platform_view->GetOwnerViewController().get()
                 codec:[FlutterStandardMessageCodec sharedInstance]]);
   [accessibility_channel_.get() setMessageHandler:^(id message, FlutterReply reply) {
     HandleEvent((NSDictionary*)message);
@@ -506,6 +502,7 @@ AccessibilityBridge::AccessibilityBridge(UIView* view, PlatformViewIOS* platform
 }
 
 AccessibilityBridge::~AccessibilityBridge() {
+  clearState();
   view_.accessibilityElements = nil;
   [accessibility_channel_.get() setMessageHandler:nil];
 }
@@ -654,11 +651,11 @@ SemanticsObject* AccessibilityBridge::GetOrCreateObject(int32_t uid,
         [objects_ removeObjectForKey:@(node.id)];
         if (isTextField) {
           // Text fields are backed by objects that implement UITextInput.
-          object =
-              [[[TextInputSemanticsObject alloc] initWithBridge:GetWeakPtr() uid:uid] autorelease];
+          object = [[[TextInputSemanticsObject alloc] initWithBridge:GetWeakPtr()
+                                                                 uid:uid] autorelease];
         } else {
-          object =
-              [[[FlutterSemanticsObject alloc] initWithBridge:GetWeakPtr() uid:uid] autorelease];
+          object = [[[FlutterSemanticsObject alloc] initWithBridge:GetWeakPtr()
+                                                               uid:uid] autorelease];
         }
         [object.parent.children replaceObjectAtIndex:positionInChildlist withObject:object];
         objects_.get()[@(node.id)] = object;
@@ -685,6 +682,12 @@ void AccessibilityBridge::HandleEvent(NSDictionary<NSString*, id>* annotatedEven
 
 fml::WeakPtr<AccessibilityBridge> AccessibilityBridge::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
+}
+
+void AccessibilityBridge::clearState() {
+  [objects_ removeAllObjects];
+  previous_route_id_ = 0;
+  previous_routes_.clear();
 }
 
 }  // namespace shell

@@ -1,4 +1,4 @@
-// Copyright 2017 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -23,19 +23,14 @@
 #include "flutter/runtime/dart_isolate.h"
 #include "flutter/runtime/dart_service_isolate.h"
 #include "flutter/runtime/start_up.h"
-#include "third_party/dart/runtime/bin/embedded_dart_io.h"
+#include "third_party/dart/runtime/include/bin/dart_io_api.h"
 #include "third_party/tonic/converter/dart_converter.h"
 #include "third_party/tonic/dart_class_library.h"
 #include "third_party/tonic/dart_class_provider.h"
-#include "third_party/tonic/dart_sticky_error.h"
 #include "third_party/tonic/file_loader/file_loader.h"
 #include "third_party/tonic/logging/dart_error.h"
 #include "third_party/tonic/scopes/dart_api_scope.h"
 #include "third_party/tonic/typed_data/uint8_list.h"
-
-#ifdef ERROR
-#undef ERROR
-#endif
 
 namespace dart {
 namespace observatory {
@@ -64,11 +59,7 @@ static const char* kDartLanguageArgs[] = {
     // clang-format off
     "--enable_mirrors=false",
     "--background_compilation",
-    "--await_is_keyword",
     "--causal_async_stacks",
-    "--strong",
-    "--reify_generic_functions",
-    "--sync_async",
     // clang-format on
 };
 
@@ -99,8 +90,15 @@ static const char* kDartEndlessTraceBufferArgs[]{
     "--timeline_recorder=endless",
 };
 
+static const char* kDartSystraceTraceBufferArgs[]{
+    "--timeline_recorder=systrace",
+};
+
 static const char* kDartFuchsiaTraceArgs[] FML_ALLOW_UNUSED_TYPE = {
     "--systrace_timeline",
+};
+
+static const char* kDartTraceStreamsArgs[] = {
     "--timeline_streams=Compiler,Dart,Debugger,Embedder,GC,Isolate,VM",
 };
 
@@ -143,7 +141,9 @@ Dart_Handle GetVMServiceAssetsArchiveCallback() {
     (FLUTTER_RUNTIME_MODE == FLUTTER_RUNTIME_MODE_DYNAMIC_RELEASE)
   return nullptr;
 #elif OS_FUCHSIA
-  fml::FileMapping mapping("pkg/data/observatory.tar", false /* executable */);
+  fml::UniqueFD fd = fml::OpenFile("pkg/data/observatory.tar", false,
+                                   fml::FilePermission::kRead);
+  fml::FileMapping mapping(fd, {fml::FileMapping::Protection::kRead});
   if (mapping.GetSize() == 0 || mapping.GetMapping() == nullptr) {
     FML_LOG(ERROR) << "Fail to load Observatory archive";
     return nullptr;
@@ -319,7 +319,7 @@ DartVM::DartVM(const Settings& settings,
   // it does not recognize, it exits immediately.
   args.push_back("--ignore-unrecognized-flags");
 
-  for (const auto& profiler_flag :
+  for (auto* const profiler_flag :
        ProfilingFlags(settings.enable_dart_profiling)) {
     args.push_back(profiler_flag);
   }
@@ -331,18 +331,18 @@ DartVM::DartVM(const Settings& settings,
                 arraysize(kDartPrecompilationArgs));
   }
 
-  // Enable checked mode if we are not running precompiled code. We run non-
+  // Enable Dart assertions if we are not running precompiled code. We run non-
   // precompiled code only in the debug product mode.
-  bool use_checked_mode = !settings.dart_non_checked_mode;
+  bool enable_asserts = !settings.disable_dart_asserts;
 
 #if FLUTTER_RUNTIME_MODE == FLUTTER_RUNTIME_MODE_DYNAMIC_PROFILE || \
     FLUTTER_RUNTIME_MODE == FLUTTER_RUNTIME_MODE_DYNAMIC_RELEASE
-  use_checked_mode = false;
+  enable_asserts = false;
 #endif
 
 #if !OS_FUCHSIA
   if (IsRunningPrecompiledCode()) {
-    use_checked_mode = false;
+    enable_asserts = false;
   }
 #endif  // !OS_FUCHSIA
 
@@ -353,11 +353,7 @@ DartVM::DartVM(const Settings& settings,
               arraysize(kDartWriteProtectCodeArgs));
 #endif
 
-  const bool is_preview_dart2 =
-      Dart_IsDart2Snapshot(isolate_snapshot_->GetData()->GetSnapshotPointer());
-  FML_CHECK(is_preview_dart2) << "Not Dart 2!";
-
-  if (use_checked_mode) {
+  if (enable_asserts) {
     PushBackAll(&args, kDartAssertArgs, arraysize(kDartAssertArgs));
   }
 
@@ -372,12 +368,19 @@ DartVM::DartVM(const Settings& settings,
                 arraysize(kDartEndlessTraceBufferArgs));
   }
 
+  if (settings.trace_systrace) {
+    PushBackAll(&args, kDartSystraceTraceBufferArgs,
+                arraysize(kDartSystraceTraceBufferArgs));
+    PushBackAll(&args, kDartTraceStreamsArgs, arraysize(kDartTraceStreamsArgs));
+  }
+
   if (settings.trace_startup) {
     PushBackAll(&args, kDartTraceStartupArgs, arraysize(kDartTraceStartupArgs));
   }
 
 #if defined(OS_FUCHSIA)
   PushBackAll(&args, kDartFuchsiaTraceArgs, arraysize(kDartFuchsiaTraceArgs));
+  PushBackAll(&args, kDartTraceStreamsArgs, arraysize(kDartTraceStreamsArgs));
 #endif
 
   for (size_t i = 0; i < settings.dart_flags.size(); i++)
@@ -435,6 +438,14 @@ DartVM::DartVM(const Settings& settings,
                                  &ServiceStreamCancelCallback);
 
   Dart_SetEmbedderInformationCallback(&EmbedderInformationCallback);
+
+  if (settings.dart_library_sources_kernel != nullptr) {
+    std::unique_ptr<fml::Mapping> dart_library_sources =
+        settings.dart_library_sources_kernel();
+    // Set sources for dart:* libraries for debugging.
+    Dart_SetDartLibrarySourcesKernel(dart_library_sources->GetMapping(),
+                                     dart_library_sources->GetSize());
+  }
 }
 
 DartVM::~DartVM() {
